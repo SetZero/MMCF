@@ -42,11 +42,19 @@ SwitchControl &SwitchControl::operator=(SwitchControl &&rhs) {
 }
 SwitchControl::SwitchControl(SwitchControl &&other) { swap(other); }
 
-SwitchControl::~SwitchControl() { mySwitches.erase(axisChar); }
+SwitchControl::~SwitchControl() {
+  delete mySwitches.at(axisChar);
+  mySwitches.erase(axisChar);
+}
 
 void SwitchControl::enableInterruptSwitch() {
   Serial.printf("Attached an Interrupt to Pin #%d\n\r", HOME);
-  attachInterrupt(HOME, interruptHandlerHome, HIGH);
+  // already HIGH ?
+  if (digitalRead(HOME)) {
+    interruptHandlerHome();
+  } else {
+    attachInterrupt(HOME, interruptHandlerHome, HIGH);
+  }
 }
 
 void SwitchControl::clearInterruptSwitch() {

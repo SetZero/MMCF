@@ -3,9 +3,8 @@
 #include "LibStepper.h"
 #include <stdint.h>
 
-#define CAN_BUS 1
-#define I2C_BUS 2
-#define COMMUNICATION_INTERFACE CAN_BUS
+enum CommunicationInterfaces { CAN_BUS, I2C_BUS };
+extern const CommunicationInterfaces COMMUNICATION_INTERFACE;
 
 extern const uint8_t STEPS_PER_MM;
 extern const uint8_t MICROSTEPS;

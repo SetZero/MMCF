@@ -11,7 +11,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-PlotterInterpreter *PlotterI;
+PlotterInterpreter<ZAxisControllerCAN> *PlotterI;
 
 void setup() {
   // Initialize serial and wait for port to open:
@@ -20,27 +20,27 @@ void setup() {
   Serial.print("\n\r\n\n+--------------------------------+\r\n");
   Serial.print("|                                |\r\n");
   Serial.print("|     Welcome to my Printer!     |\r\n");
-#if COMMUNICATION_INTERFACE == I2C_BUS
-  Serial.print("|          I2C VERSION           |\r\n");
-#elif COMMUNICATION_INTERFACE == CAN_BUS
-  Serial.print("|          CAN VERSION           |\r\n");
-#endif
+  if (COMMUNICATION_INTERFACE == I2C_BUS)
+    Serial.print("|          I2C VERSION           |\r\n");
+  else if (COMMUNICATION_INTERFACE == CAN_BUS)
+    Serial.print("|          CAN VERSION           |\r\n");
   Serial.print("|                                |\r\n");
   Serial.print("+--------------------------------+\r\n");
 
-#if COMMUNICATION_INTERFACE == I2C_BUS
-  Wire.begin();
-  DS3231 rtc;
-  rtc.synchonizeTime();
+  if (COMMUNICATION_INTERFACE == I2C_BUS) {
+    Wire.begin();
+    DS3231 rtc;
+    rtc.synchonizeTime();
 
-  std::tm t;
-  t = rtc.getTime();
-  Serial.printf("Time: %02d:%02d:%02d, %02d.%02d.%04d\n\r", t.tm_hour, t.tm_min,
-                t.tm_sec, t.tm_mday, t.tm_mon, t.tm_year);
+    std::tm t;
+    t = rtc.getTime();
+    Serial.printf("Time: %02d:%02d:%02d, %02d.%02d.%04d\n\r", t.tm_hour,
+                  t.tm_min, t.tm_sec, t.tm_mday, t.tm_mon, t.tm_year);
+    // PlotterI = new PlotterInterpreter<ZAxisControllerI2C>();
 
-#endif
-
-  PlotterI = new PlotterInterpreter();
+  } else if (COMMUNICATION_INTERFACE == CAN_BUS) {
+    PlotterI = new PlotterInterpreter<ZAxisControllerCAN>();
+  }
 }
 
 void loop() { PlotterI->readLine(); }

@@ -1,5 +1,7 @@
 #include "settings.h"
 
+const CommunicationInterfaces COMMUNICATION_INTERFACE = CAN_BUS;
+
 const uint8_t MICROSTEPS = 16;
 const uint8_t STEPS_PER_MM = MICROSTEPS * 5;
 

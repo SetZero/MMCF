@@ -10,14 +10,10 @@
 
 #include "FunctionLibary.h"
 #include "LibStepper.h"
+#include "ZAxisControllerCAN.h"
+#include "ZAxisControllerI2C.h"
 #include "settings.h"
 #include <stdint.h>
-
-#if COMMUNICATION_INTERFACE == I2C_BUS
-#include "ZAxisControllerI2C.h"
-#elif COMMUNICATION_INTERFACE == CAN_BUS
-#include "ZAxisControllerCAN.h"
-#endif
 
 enum PlotterDistanceModes { RELATIVE, ABSOLUTE };
 enum PlotterUnits { MM, INCH };
@@ -66,7 +62,7 @@ struct PlotterValues {
   float r;                  // arc radius
 };
 
-class PlotterInterpreter {
+template <typename T> class PlotterInterpreter {
 private:
   const static uint8_t MAX_BUF = 128; // max size of the buffer
   char gcodeBuffer[MAX_BUF];          // UART rec char buffer
@@ -82,11 +78,7 @@ private:
   LibStepper stepperX{'X',        STEP_PIN_X, DIR_PIN_X,  STOP_PIN_X,
                       HOME_PIN_X, HOME_DIR_X, stepsPerMM, microstep};
 
-#if COMMUNICATION_INTERFACE == I2C_BUS
-  ZAxisControllerI2C zController;
-#elif COMMUNICATION_INTERFACE == CAN_BUS
-  ZAxisControllerCAN zController;
-#endif
+  T zController;
 
   /*
    * Executes all movement commands saved in the current Movement variables.

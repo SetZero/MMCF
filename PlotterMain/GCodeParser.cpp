@@ -7,13 +7,17 @@
 
 #include "FunctionLibary.h"
 #include "GCodeParser.h"
+#include "ZAxisControllerCAN.h"
 #include <Arduino.h>
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <type_traits>
 
-PlotterInterpreter::PlotterInterpreter() {
+template <typename T> PlotterInterpreter<T>::PlotterInterpreter() {
+  static_assert(std::is_base_of<IZAxisController, T>::value,
+                "T must be derived from IZAxisController");
   setFeedrate(400);
   Serial.print("Homing...\n\r");
   stepperX.goHome();
@@ -21,11 +25,11 @@ PlotterInterpreter::PlotterInterpreter() {
   Serial.print("Finished setup!\n\r");
 }
 
-PlotterInterpreter::~PlotterInterpreter() {
+template <typename T> PlotterInterpreter<T>::~PlotterInterpreter() {
   // Cleanup cStrings
 }
 
-void PlotterInterpreter::displayHelp() {
+template <typename T> void PlotterInterpreter<T>::displayHelp() {
   Serial.print("\n\n\e[31m+--------------------------------+\r\n");
   Serial.print("|                                |\r\n");
   Serial.print("|           CNC PRINTER          |\r\n");
@@ -33,18 +37,18 @@ void PlotterInterpreter::displayHelp() {
   Serial.print("+--------------------------------+\r\n");
 }
 
-void PlotterInterpreter::gcodeReady() {
+template <typename T> void PlotterInterpreter<T>::gcodeReady() {
   gcodeCurrentPosition = 0;
   Serial.print("ok\n");
 }
 
-void PlotterInterpreter::currentInfo() {
+template <typename T> void PlotterInterpreter<T>::currentInfo() {
   Serial.printf("ok X: %.2f ", myState.x);
   Serial.printf("Y: %.2f ", myState.y);
   Serial.printf("Z: %.2f \r\n", myState.z);
 }
 
-void PlotterInterpreter::readLine() {
+template <typename T> void PlotterInterpreter<T>::readLine() {
   if (Serial.available() > 0) {
     char c = Serial.read();
     Serial.print(c);
@@ -60,7 +64,8 @@ void PlotterInterpreter::readLine() {
   }
 }
 
-int16_t PlotterInterpreter::findCharPos(char *cString, char find) {
+template <typename T>
+int16_t PlotterInterpreter<T>::findCharPos(char *cString, char find) {
   size_t pos = 0;
   while (pos < strlen(cString)) {
     if (cString[pos] == find) {
@@ -71,8 +76,9 @@ int16_t PlotterInterpreter::findCharPos(char *cString, char find) {
   return -1;
 }
 
-PlotterNumberValue PlotterInterpreter::findNumber(char *cString, char find,
-                                                  bool convertToMM) {
+template <typename T>
+PlotterNumberValue PlotterInterpreter<T>::findNumber(char *cString, char find,
+                                                     bool convertToMM) {
   uint8_t isNegative = 0;
   uint8_t isFract = 0;
   float value = 0;
@@ -129,7 +135,8 @@ PlotterNumberValue PlotterInterpreter::findNumber(char *cString, char find,
   return output;
 }
 
-float PlotterInterpreter::calcMovementMod(long i, long dx) {
+template <typename T>
+float PlotterInterpreter<T>::calcMovementMod(long i, long dx) {
 
   float fact;
   if (dx > 0) {
@@ -148,7 +155,7 @@ float PlotterInterpreter::calcMovementMod(long i, long dx) {
   return fact;
 }
 
-void PlotterInterpreter::setFeedrate(float speed) {
+template <typename T> void PlotterInterpreter<T>::setFeedrate(float speed) {
   if (speed <= 1)
     return; // Feedrate of 1 or smaller is.... slow, don't do it!
   if (myState.feed == speed)
@@ -159,7 +166,7 @@ void PlotterInterpreter::setFeedrate(float speed) {
   stepperY.setStepDelay(myState.stepDelay);
 }
 
-void PlotterInterpreter::processCommand() {
+template <typename T> void PlotterInterpreter<T>::processCommand() {
   bool executionNeeded = false;
   PlotterNumberValue linenumber = findNumber(gcodeBuffer, 'N');
   if (linenumber.legal) {
@@ -365,7 +372,8 @@ void PlotterInterpreter::processCommand() {
   }
 }
 
-void PlotterInterpreter::drawLine(float newx, float newy) {
+template <typename T>
+void PlotterInterpreter<T>::drawLine(float newx, float newy) {
   long over = 0;
 
   long dx = (newx - myState.x);                         // Distance X to travel
@@ -408,15 +416,16 @@ void PlotterInterpreter::drawLine(float newx, float newy) {
   myState.y = newy;
 }
 
-float PlotterInterpreter::atan3(float dy, float dx) {
+template <typename T> float PlotterInterpreter<T>::atan3(float dy, float dx) {
   float a = std::atan2(dy, dx);
   if (a < 0)
     a = (M_PI * 2.0) + a;
   return a;
 }
 
-void PlotterInterpreter::drawArc(float cx, float cy, float x, float y,
-                                 StepperDirections dir) {
+template <typename T>
+void PlotterInterpreter<T>::drawArc(float cx, float cy, float x, float y,
+                                    StepperDirections dir) {
   // get radius
   float dx = (myState.x - cx);
   float dy = (myState.y - cy);
@@ -460,7 +469,7 @@ void PlotterInterpreter::drawArc(float cx, float cy, float x, float y,
   drawLine(round(x), round(y));
 }
 
-void PlotterInterpreter::executeMovement() {
+template <typename T> void PlotterInterpreter<T>::executeMovement() {
   switch (myMovement.currentMovement) {
   case 0:
   case 1: {
@@ -502,7 +511,8 @@ void PlotterInterpreter::executeMovement() {
   cleanupMovement();
 }
 
-void PlotterInterpreter::cleanupMovement(bool forceAll) {
+template <typename T>
+void PlotterInterpreter<T>::cleanupMovement(bool forceAll) {
   // only reset the current coordinates to 0 if you are in relative mode!
   if (myMovement.distance == RELATIVE || forceAll) {
     memset(myValues.xyz, 0, sizeof(myValues.xyz));
@@ -512,3 +522,6 @@ void PlotterInterpreter::cleanupMovement(bool forceAll) {
   myValues.r = 0;
   myMovement.currentState = FINISHED;
 }
+
+template class PlotterInterpreter<ZAxisControllerCAN>;
+template class PlotterInterpreter<ZAxisControllerI2C>;
