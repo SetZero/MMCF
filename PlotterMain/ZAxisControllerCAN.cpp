@@ -19,25 +19,31 @@ ZAxisControllerCAN::ZAxisControllerCAN() {
   CAN0.setMode(MCP_NORMAL);
   pinMode(CAN0_INT, INPUT);
 
-  byte data[8] = {static_cast<byte>(RequestControllerType), 0x00,
-                  0x00, 0x00,
-                  0x00, 0x00,
-                  0x00, 0x00};
+  byte data[8] = {static_cast<byte>(RequestControllerType),
+                  0x00,
+                  0x00,
+                  0x00,
+                  0x00,
+                  0x00,
+                  0x00,
+                  0x00};
   byte sndStat = CAN0.sendMsgBuf(MASTER_ID, 0, 8, data);
   while (digitalRead(CAN0_INT)) {
     byte sndStat = CAN0.sendMsgBuf(MASTER_ID, 0, 8, data);
-    if(sndStat == CAN_OK){
+    if (sndStat == CAN_OK) {
       Serial.println("Successfully waiting for a Plotter Head!");
     } else {
       Serial.println("Error Sending Data!");
     }
-    delay(5); 
+    delay(5);
   }
   CAN0.readMsgBuf(&rxId, &len, rxBuf);
   if (len < 3)
     Serial.print("Malformed Package");
   controllerType = static_cast<ZAxisControllerTypes>(rxId);
-  Serial.printf("\nI found the following controller for our Z-Axis(0x%.3lX / %d) :", rxId, (int)controllerType);
+  Serial.printf(
+      "\nI found the following controller for our Z-Axis(0x%.3lX / %d) :", rxId,
+      (int)controllerType);
   // What type of controller have we contacted right now?
 
   switch (controllerType) {
@@ -62,14 +68,18 @@ void ZAxisControllerCAN::sendZPosition(float zPosition) {
   Serial.printf("Sending %f over  CAN\n\r", zPosition);
   uint8_t *wirePosition = reinterpret_cast<uint8_t *>(&zPosition);
   byte data[8] = {static_cast<byte>(RequestMoveZAxis),
-                  wirePosition[0], wirePosition[1],
-                  wirePosition[2], wirePosition[3],
-                  0x00, 0x00, 0x00};
-   byte sndStat = CAN0.sendMsgBuf(MASTER_ID, 0, 8, data);
-   if(sndStat != CAN_OK){ 
+                  wirePosition[0],
+                  wirePosition[1],
+                  wirePosition[2],
+                  wirePosition[3],
+                  0x00,
+                  0x00,
+                  0x00};
+  byte sndStat = CAN0.sendMsgBuf(MASTER_ID, 0, 8, data);
+  if (sndStat != CAN_OK) {
     delay(5);
     sendZPosition(zPosition);
-   }
+  }
 }
 ZAxisStates ZAxisControllerCAN::sendZPositionWithAck(float zPosition) {
   sendZPosition(zPosition);

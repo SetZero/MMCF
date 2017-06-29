@@ -11,7 +11,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-PlotterInterpreter<ZAxisControllerCAN> *PlotterI;
+std::unique_ptr<PlotterInterpreter<ZAxisControllerCAN>> PlotterI;
 
 void setup() {
   // Initialize serial and wait for port to open:
@@ -39,7 +39,8 @@ void setup() {
     // PlotterI = new PlotterInterpreter<ZAxisControllerI2C>();
 
   } else if (COMMUNICATION_INTERFACE == CAN_BUS) {
-    PlotterI = new PlotterInterpreter<ZAxisControllerCAN>();
+    // PlotterI = new PlotterInterpreter<ZAxisControllerCAN>();
+    PlotterI = std::make_unique<PlotterInterpreter<ZAxisControllerCAN>>();
   }
 }
 

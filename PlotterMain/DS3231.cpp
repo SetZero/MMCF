@@ -49,7 +49,7 @@ unsigned long DS3231::getTimestamp() {
 
 void DS3231::setTime(std::tm &when) {
   Wire.beginTransmission(DS3231ADDR);
-  Wire.write(0x0); // start address
+  Wire.write(0x0); // start Addresse
   uint8_t century;
 
   if (when.tm_year > 100) {

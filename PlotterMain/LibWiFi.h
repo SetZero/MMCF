@@ -14,8 +14,8 @@
  */
 class LibWiFi {
 private:
-  const char *ssid = "WLAN-C32D56";
-  const char *password = "8554418519542634";
+  const char *ssid = "WLAN-****";
+  const char *password = "v=wAGmD4c2y9A";
   LibWiFi();
 
 public:
