@@ -35,6 +35,7 @@ ZAxisControllerI2C::ZAxisControllerI2C() {
     Serial.println("A Pen Drawer!");
     break;
   case LaserEngraver:
+    //どうしたら　あなたに詩を刻めるんだろう？
     Serial.println("A Laser Engraver!");
     break;
   case Printer3D:

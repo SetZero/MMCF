@@ -17,6 +17,7 @@ class IZAxisController {
 public:
   virtual void sendZPosition(float zPosition) = 0;
   virtual ZAxisStates sendZPositionWithAck(float zPosition) = 0;
+  virtual ~IZAxisController() {}
 };
 
 #endif

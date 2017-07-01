@@ -23,11 +23,6 @@ struct PlotterCoordinates {
 
 class LibStepper {
 private:
-  /*const int STEP_PINX = 33;
-  const int DIR_PINX = 25;
-  const int STEP_PINY = 26;
-  const int DIR_PINY = 27;
-  const int STOP_PIN = 32;*/
   const char AXIS_CHAR;
   const int STEP_PIN;
   const int DIR_PIN;
