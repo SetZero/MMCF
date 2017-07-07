@@ -44,8 +44,6 @@ void LibStepper::doMMStep(StepperDirections dir) {
 }
 
 uint16_t LibStepper::goHome() {
-  // doMMStep(FORWARD); // Just to be sure that I'm not in the switch already!
-  // doMMStep(FORWARD);
   Serial.printf("Homeing %c...", AXIS_CHAR);
   scontrol->reachedHome = HOMEING;
   scontrol->enableInterruptSwitch();
@@ -77,16 +75,16 @@ void LibStepper::goMax() {
 void LibStepper::setStepDelay(long delay) { stepDelay = delay; }
 
 void LibStepper::stopSteppers() {
-  // TODO
   digitalWrite(STOP_PIN, HIGH);
   state = OFF;
 }
 
 void LibStepper::startSteppers() {
-  // TODO
   digitalWrite(STOP_PIN, LOW);
   state = ON;
-  delay(1);
+  delay(1); // Documentation recommends a short wait time after the stepers are
+            // started. Sadly, "a short delay" hasn't been specified, so I'll go
+            // for 1 ms
 }
 
 StepperState LibStepper::currentState() { return state; }

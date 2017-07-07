@@ -1,6 +1,10 @@
 /*
  * DS3231.h
  *
+ * This class is needed for further progress of the project.
+ * It won't be used in the current project, but can be useful for keeping track
+ * of the current time
+ *
  * Created: 2017-05-21 22:02:11
  *  Author: Sebastian
  */

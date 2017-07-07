@@ -33,7 +33,7 @@ template <typename T> void PlotterInterpreter<T>::displayHelp() {
   Serial.print("\n\n\e[31m+--------------------------------+\r\n");
   Serial.print("|                                |\r\n");
   Serial.print("|           CNC PRINTER          |\r\n");
-  Serial.print("|             v. 0.3.1           |\r\n");
+  Serial.print("|             v. 0.3.2           |\r\n");
   Serial.print("+--------------------------------+\r\n");
 }
 
@@ -65,74 +65,10 @@ template <typename T> void PlotterInterpreter<T>::readLine() {
 }
 
 template <typename T>
-int16_t PlotterInterpreter<T>::findCharPos(char *cString, char find) {
-  size_t pos = 0;
-  while (pos < strlen(cString)) {
-    if (cString[pos] == find) {
-      return pos;
-    }
-    pos++;
-  }
-  return -1;
-}
-
-template <typename T>
-PlotterNumberValue PlotterInterpreter<T>::findNumber(char *cString, char find,
+PlotterNumberValue PlotterInterpreter<T>::findNumber(char find,
                                                      bool convertToMM) {
-  uint8_t isNegative = 0;
-  uint8_t isFract = 0;
-  float value = 0;
-  int c;
-  float fraction = 1.0;
-  PlotterNumberValue output;
-
-  int16_t numberpos = findCharPos(cString, find);
-  if (numberpos == -1) {
-    output.legal = false;
-    return output;
-  }
-  int16_t currpos =
-      numberpos + 1; // +1 as we have to go one step behind the found char
-
-  // Go through C-Array for as long as we have found either a Digit (0-9),
-  // signedness char (only -), which is explicit (as we have do..while) or a
-  // Fractal Character (.)
-  do {
-    c = cString[currpos];
-    if (c == '-')
-      isNegative = 1;
-    else if (c == '.') {
-      isFract = 1;
-    } else if (c >= '0' && c <= '9') {
-      value = value * 10 + c - '0';
-      if (isFract)
-        fraction *= 0.1;
-    }
-    currpos++;
-    c = cString[currpos];
-  } while ((((c >= '0' && c <= '9') || (c == '.' && !isFract)) &&
-            currpos <= MAX_BUF));
-
-  // If we have found a sign char (-) change the number to negative
-  if (isNegative)
-    value = -value;
-
-  // If we found a fract, change the number by 10^-n and while we are on it we
-  // can change the found amount by stepsPerMM
-  if (isFract) {
-    if (convertToMM)
-      output.number = value * fraction * stepsPerMM;
-    else
-      output.number = value * fraction;
-    output.legal = true;
-    return output;
-  }
-  if (convertToMM)
-    output.number = value * stepsPerMM;
-  else
-    output.number = value;
-  output.legal = true;
-  return output;
+  FunctionLibary::findNumber(gcodeBuffer, MAX_BUF, find, convertToMM,
+                             stepsPerMM);
 }
 
 template <typename T>
@@ -168,11 +104,11 @@ template <typename T> void PlotterInterpreter<T>::setFeedrate(float speed) {
 
 template <typename T> void PlotterInterpreter<T>::processCommand() {
   bool executionNeeded = false;
-  PlotterNumberValue linenumber = findNumber(gcodeBuffer, 'N');
+  PlotterNumberValue linenumber = findNumber('N');
   if (linenumber.legal) {
     myValues.lineNumber = linenumber.number;
   }
-  PlotterNumberValue gcode = findNumber(gcodeBuffer, 'G');
+  PlotterNumberValue gcode = findNumber('G');
 
   if (gcode.legal) {
     int cmd = (int)gcode.number;
@@ -187,11 +123,11 @@ template <typename T> void PlotterInterpreter<T>::processCommand() {
     case 0:
     case 1: {
       myMovement.currentMovement = 1;
-      PlotterNumberValue tmpfeed = findNumber(gcodeBuffer, 'F');
+      PlotterNumberValue tmpfeed = findNumber('F');
       if (tmpfeed.legal)
         setFeedrate(tmpfeed.number);
       // Set X, Y, Z
-      PlotterNumberValue tmpValue = findNumber(gcodeBuffer, 'X', true);
+      PlotterNumberValue tmpValue = findNumber('X', true);
       if (tmpValue.legal) { // TODO: Add Maximum Value
         if ((myMovement.distance == RELATIVE &&
              (myState.x + tmpValue.number >= 0)) ||
@@ -199,7 +135,7 @@ template <typename T> void PlotterInterpreter<T>::processCommand() {
           myValues.xyz[0] = tmpValue.number;
       }
 
-      tmpValue = findNumber(gcodeBuffer, 'Y', true);
+      tmpValue = findNumber('Y', true);
       if (tmpValue.legal) {
         if ((myMovement.distance == RELATIVE &&
              (myState.y + tmpValue.number >= 0)) ||
@@ -207,7 +143,7 @@ template <typename T> void PlotterInterpreter<T>::processCommand() {
           myValues.xyz[1] = tmpValue.number;
       }
 
-      tmpValue = findNumber(gcodeBuffer, 'Z');
+      tmpValue = findNumber('Z');
       if (tmpValue.legal) {
         if ((myMovement.distance == RELATIVE &&
              (myState.z + tmpValue.number >= 0)) ||
@@ -224,11 +160,11 @@ template <typename T> void PlotterInterpreter<T>::processCommand() {
     case 2:
     case 3: {
       myMovement.currentMovement = cmd;
-      PlotterNumberValue tmpfeed = findNumber(gcodeBuffer, 'F');
+      PlotterNumberValue tmpfeed = findNumber('F');
       if (tmpfeed.legal)
         setFeedrate(tmpfeed.number);
       // Set X, Y, Z
-      PlotterNumberValue tmpValue = findNumber(gcodeBuffer, 'X', true);
+      PlotterNumberValue tmpValue = findNumber('X', true);
       if (tmpValue.legal) { // TODO: Add Maximum Value
         if ((myMovement.distance == RELATIVE &&
              (myState.x + tmpValue.number >= 0)) ||
@@ -236,7 +172,7 @@ template <typename T> void PlotterInterpreter<T>::processCommand() {
           myValues.xyz[0] = tmpValue.number;
       }
 
-      tmpValue = findNumber(gcodeBuffer, 'Y', true);
+      tmpValue = findNumber('Y', true);
       if (tmpValue.legal) {
         if ((myMovement.distance == RELATIVE &&
              (myState.y + tmpValue.number >= 0)) ||
@@ -244,7 +180,7 @@ template <typename T> void PlotterInterpreter<T>::processCommand() {
           myValues.xyz[1] = tmpValue.number;
       }
 
-      tmpValue = findNumber(gcodeBuffer, 'Z');
+      tmpValue = findNumber('Z');
       if (tmpValue.legal) {
         if ((myMovement.distance == RELATIVE &&
              (myState.z + tmpValue.number >= 0)) ||
@@ -252,12 +188,12 @@ template <typename T> void PlotterInterpreter<T>::processCommand() {
           myValues.xyz[2] = tmpValue.number;
       }
 
-      tmpValue = findNumber(gcodeBuffer, 'I', true);
+      tmpValue = findNumber('I', true);
       if (tmpValue.legal) {
         myValues.ijk[0] = tmpValue.number;
       }
 
-      tmpValue = findNumber(gcodeBuffer, 'J', true);
+      tmpValue = findNumber('J', true);
       if (tmpValue.legal) {
         myValues.ijk[1] = tmpValue.number;
       }
@@ -269,10 +205,10 @@ template <typename T> void PlotterInterpreter<T>::processCommand() {
     // Accepts S (Seconds) and P (Milliseconds)
     case 4: {
       uint32_t wait = 0;
-      PlotterNumberValue tmpwait = findNumber(gcodeBuffer, 'P');
+      PlotterNumberValue tmpwait = findNumber('P');
       if (tmpwait.legal)
         wait += tmpwait.number;
-      tmpwait = findNumber(gcodeBuffer, 'S');
+      tmpwait = findNumber('S');
       if (tmpwait.legal)
         wait += (tmpwait.number * 1000);
       FunctionLibary::pause(wait);
@@ -290,9 +226,9 @@ template <typename T> void PlotterInterpreter<T>::processCommand() {
     // currently only X and Y)
     case 28: {
       setFeedrate(400);
-      PlotterNumberValue tmpX = findNumber(gcodeBuffer, 'X');
-      PlotterNumberValue tmpY = findNumber(gcodeBuffer, 'Y');
-      PlotterNumberValue tmpZ = findNumber(gcodeBuffer, 'Z');
+      PlotterNumberValue tmpX = findNumber('X');
+      PlotterNumberValue tmpY = findNumber('Y');
+      PlotterNumberValue tmpZ = findNumber('Z');
       if (tmpX.legal) {
         stepperX.goHome();
         myState.x = 0;
@@ -328,7 +264,7 @@ template <typename T> void PlotterInterpreter<T>::processCommand() {
   }
 
   // miscellaneous commands
-  gcode = findNumber(gcodeBuffer, 'M', false);
+  gcode = findNumber('M', false);
   if (gcode.legal) {
     int cmd = (int)gcode.number;
     switch (cmd) {

@@ -20,15 +20,6 @@ enum PlotterUnits { MM, INCH };
 enum PlotterCurrentPrintState { IN_PROGRESS, FINISHED, SLEEP };
 
 /*
- * Saves a Number which can be check whether it's a valid value or not,
- * see http://en.cppreference.com/w/cpp/utility/optional
- */
-struct PlotterNumberValue {
-  float number = 0.0;
-  bool legal = false;
-};
-
-/*
  * Saves Information about the executed commands and their resulting values
  */
 struct PlotterMovmentInformation {
@@ -137,20 +128,9 @@ public:
    */
   void readLine();
   /*
-   * Finde die Position eines Characters und gebe diese zurück wenn der char
-   * gefunden wurde
-   */
-  int16_t findCharPos(char *cString, char find);
-  /*
-   * Finde die Nummer nach einem Char.
-   * zB. G02 liefert 2, wenn findNumber('G', BUFFER, 0);
-   * übergeben wurde.
-   * Übergeben wird eine überprüfte Zahl, wenn keine Zahl gefunden wird
-   * so wird die false flag der Zahl gesetzt.
-   */
-  PlotterNumberValue findNumber(char *cString, char find,
-                                bool convertToMM = false);
-
+  * Wrapper function of FunctionLibary::findNumber()
+  */
+  PlotterNumberValue findNumber(char find, bool convertToMM = false);
   /*
    * Calculates the Feedrate
    */

@@ -60,5 +60,8 @@ void SwitchControl::enableInterruptSwitch() {
 void SwitchControl::clearInterruptSwitch() {
   // EIMSK &= ~(1 << INT1);
   // EIFR = EIFR | 0x01;
+  // Even though this shouldn't do anything if we
+  // accidentally enter the Interrupt without needing it
+  // it is better to disable this for performance reasons
   detachInterrupt(HOME);
 }

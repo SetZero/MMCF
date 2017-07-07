@@ -1,8 +1,8 @@
 /*
- * CPPFile1.cpp
- *
+ * DS3231.cpp
+
  * Created: 2017-05-21 22:01:17
- *  Author: Sebastian
+ *  Author: Sebastian Dauenhauer
  */
 
 #include "DS3231.h"
